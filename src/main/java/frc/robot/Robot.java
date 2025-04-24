@@ -33,7 +33,7 @@ public class Robot extends TimedRobot {
 
   private static final double WHEEL_ROTATIONS_PER_MOTOR_ROTATION = (1.0 / (150.0 / 7.0));
 
-  private static final int kMotorPort = 15;
+  private static final int kMotorPort = 10;
   private static final int kJoystickPort = 0;
 
   private final SparkFlex m_motor;
@@ -55,7 +55,7 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotPeriodic() {
-    wheelAngle = Rotation2d.fromRotations(m_encoder.getPosition() * WHEEL_ROTATIONS_PER_MOTOR_ROTATION).getRadians();
+    wheelAngle = MathUtil.angleModulus(Rotation2d.fromRotations(m_encoder.getPosition() * WHEEL_ROTATIONS_PER_MOTOR_ROTATION).getRadians());
 
     SmartDashboard.putNumber("Encoder", m_encoder.getPosition());
     SmartDashboard.putNumber("Joystick", m_joystick.getLeftY());
@@ -68,15 +68,15 @@ public class Robot extends TimedRobot {
   @Override
   public void teleopPeriodic() {
     // Get the joystick angle and convert it to a setpoint for the motor
-    Rotation2d rotation = Rotation2d.fromDegrees(calculateStickAngle());
+    Rotation2d rotation = Rotation2d.fromRadians(calculateStickAngle());
 
     // Calculate angle error between motor setpoint and current wheel angle
-    double angleError = MathUtil.angleModulus(rotation.getRadians() - wheelAngle);
+    double angleError = (rotation.getRadians() - wheelAngle);
 
     if (Math.abs(angleError) < WHEEL_ERROR_TOLERANCE_RADIANS) {
       m_motor.set(0.0);
     } else {
-      double motorSpeed = MathUtil.clamp(angleError, MIN_SPEED, MAX_SPEED);
+      double motorSpeed = MathUtil.clamp(angleError * .25, MIN_SPEED, MAX_SPEED);
 
       m_motor.set(motorSpeed);
     }
